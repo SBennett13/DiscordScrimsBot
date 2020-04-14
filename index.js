@@ -76,13 +76,17 @@ function createValorant(args, receivedMessage){
     let players = getPlayers(receivedMessage);
     const {team1, team2, extras, makeTeamsError} = makeTeams(players, 5)
     if (makeTeamsError){
-        console.log("Error making teams: " + makeTeamsError)
+        receivedMessage.channel.send("Error making Valorant Teams: " + makeTeamsError)
         return
     }
     let map = getMap();
-    console.log(team1, team2, extras, map)
     const attackChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1A" && v.type === 'voice').first();
     const defendChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1B" && v.type === 'voice').first();
+
+    //console.log(team1, team2, extras)
+
+    receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", "))
+
 }
 
 function getRandom(max){
