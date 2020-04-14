@@ -27,13 +27,37 @@ function processCommand(receivedMsg){
     let args = splitCmd.slice(1)
 
     console.log("Command Received: " + cmd)
-    console.log("Arguments: " + args)
+    //console.log("Arguments: " + args)
 
     if (cmd == "help"){
         helpMessage(args, receivedMsg)
     }else if (cmd == "valorant"){
         createValorant(args, receivedMsg)
     }
+}
+
+function getPlayers(receivedMsg, excludes){
+    let participants = []
+    const preChannel = receivedMsg.guild.channels.cache.filter(v => v.name === "Side Hoe Quarantine" && v.type === 'voice').first()
+    preChannel.members.each(v => {participants.push(v.user.username)})
+    return participants
+}
+
+function makeTeams(allPlayers, teamSize){
+    if (allPlayers.length < teamSize * 2){
+        return {makeTeamsError: "Too few players"}
+    }
+    let team1 = [], team2 = [], remainingPlayers = [...allPlayers];
+    while (team2.length < teamSize){
+        let rand = getRandom(remainingPlayers.length);
+        team1.push(remainingPlayers[rand]);
+        remainingPlayers = [...remainingPlayers.slice(0, rand), ...remainingPlayers.slice(rand+1)]
+
+        rand = getRandom(remainingPlayers.length);
+        team2.push(remainingPlayers[rand])
+        remainingPlayers = [...remainingPlayers.slice(0, rand), ...remainingPlayers.slice(rand+1)]
+    }
+    return {team1: team1, team2:team2, extras: remainingPlayers}
 }
 
 function helpMessage(args, receivedMessage){
@@ -43,27 +67,17 @@ function helpMessage(args, receivedMessage){
 }
 
 function createValorant(args, receivedMessage){
-    let target = receivedMessage.author;
-    console.log(target)
-    const voiceChannels = receivedMessage.guild.channels.cache.filter(v => v.type === "voice")
-    let channelID;
-    let found = false;
-    let channelMembers;
-    voiceChannels.each((vc, id) => {
-        vc.members.each(member => {
-            console.log(member)
-            if (member.user.id === target.id){
-                console.log("Found target " + target.username)
-                channelID = id
-                found = true
-            }
-        })
-        if (found){
-            channelMembers = vc.members.map(member => member.user.username)
-        }
-    })
-    console.log(channelID)
-    console.log(channelMembers)
+    let players = getPlayers(receivedMessage);
+    const {team1, team2, extras, makeTeamsError} = makeTeams(players, 5)
+    if (makeTeamsError){
+        console.log("Error making teams: " + makeTeamsError)
+        return
+    }
+    console.log(team1, team2, extras)
+}
+
+function getRandom(max){
+    return Math.floor(Math.random() * Math.floor(max))
 }
 
 client.login(secrets.bot_secret_token)
