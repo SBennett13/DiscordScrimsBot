@@ -79,18 +79,12 @@ function createValorant(args, receivedMessage){
         receivedMessage.channel.send("Error making Valorant Teams: " + makeTeamsError)
         return
     }
-<<<<<<< HEAD
     let map = getMap();
     const attackChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1A" && v.type === 'voice').first();
     const defendChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1B" && v.type === 'voice').first();
     //console.log(team1, team2, extras)
 
     receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", ") + "\n Map: " + map)
-=======
-    //console.log(team1, team2, extras)
-
-    receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", "))
->>>>>>> 4a0d32d9588079b123ecbad9a69ce3f2aa54cca4
 }
 
 function getRandom(max){
