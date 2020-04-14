@@ -84,7 +84,7 @@ function createValorant(args, receivedMessage){
     const defendChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1B" && v.type === 'voice').first();
     //console.log(team1, team2, extras)
 
-    receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", ") + "\n Map: " + map)
+    receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", ") + "\nMap: " + map)
 }
 
 function getRandom(max){
