@@ -1,0 +1,17 @@
+{
+  "name": "scrimsbot",
+  "version": "1.0.0",
+  "description": "A bot to manage scrims on discord",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "author": "Scott Bennett - scottbennett027@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0"
+  }
+}
