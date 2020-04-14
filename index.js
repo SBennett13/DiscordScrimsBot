@@ -70,10 +70,12 @@ function createValorant(args, receivedMessage){
     let players = getPlayers(receivedMessage);
     const {team1, team2, extras, makeTeamsError} = makeTeams(players, 5)
     if (makeTeamsError){
-        console.log("Error making teams: " + makeTeamsError)
+        receivedMessage.channel.send("Error making Valorant Teams: " + makeTeamsError)
         return
     }
-    console.log(team1, team2, extras)
+    //console.log(team1, team2, extras)
+
+    receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", "))
 }
 
 function getRandom(max){
