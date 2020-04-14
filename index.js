@@ -60,6 +60,12 @@ function makeTeams(allPlayers, teamSize){
     return {team1: team1, team2:team2, extras: remainingPlayers}
 }
 
+function getMap(){
+    mapList = ["Split", "Bind", "Haven"];
+    let rand = getRandom(mapList.length);
+    return mapList[rand];
+}
+
 function helpMessage(args, receivedMessage){
     if (args.length === 0){
         receivedMessage.channel.send("This is the help command, brother.")
@@ -73,7 +79,10 @@ function createValorant(args, receivedMessage){
         console.log("Error making teams: " + makeTeamsError)
         return
     }
-    console.log(team1, team2, extras)
+    let map = getMap();
+    console.log(team1, team2, extras, map)
+    const attackChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1A" && v.type === 'voice').first();
+    const defendChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1B" && v.type === 'voice').first();
 }
 
 function getRandom(max){
