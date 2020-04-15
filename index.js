@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const client = new Discord.Client();
-const uuid = require("uuid/v4");
+const uuid = require("uuid");
 const yargs = require("yargs-parser");
 const secrets = require("./secrets");
 
@@ -34,7 +34,8 @@ function processCommand(receivedMsg) {
     let splitCmd = cmd.split(" ", 2);
     console.log(splitCmd);
     cmd = splitCmd[0];
-    let args = yargs(splitCmd[1]);
+    let args = "";
+    if (splitCmd[1]) args = yargs(splitCmd[1]);
 
     console.log("Command Received: " + cmd);
     console.log("Args: " + args);
@@ -151,7 +152,7 @@ function helpMessage(args, channel) {
  *****************/
 async function createValorant(args, receivedMessage) {
     let players = getPlayers(receivedMessage);
-    const { team1, team2, extras, makeTeamsError } = makeTeams(players, 2);
+    const { team1, team2, extras, makeTeamsError } = makeTeams(players, 4);
     if (makeTeamsError) {
         receivedMessage.channel.send(
             "Error making Valorant Teams: " + makeTeamsError
