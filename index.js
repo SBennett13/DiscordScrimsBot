@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const client = new Discord.Client();
-const uuid = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 const yargs = require("yargs-parser");
 const secrets = require("./secrets");
 
@@ -183,7 +183,7 @@ async function createValorant(args, receivedMessage) {
             extras.forEach((member) => {
                 extrasMembers.push(member.user.username);
             });
-            let matchID = uuid.v4();
+            let matchID = uuidv4();
             receivedMessage.channel.send(
                 "Team 1: " +
                     team1Members.join(", ") +
