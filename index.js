@@ -30,23 +30,53 @@ client.on("ready", () => {
 
 function processCommand(receivedMsg) {
     let cmd = receivedMsg.content.substr(1);
-    console.log(cmd);
     let splitCmd = cmd.split(" ", 2);
-    console.log(splitCmd);
     cmd = splitCmd[0];
     let args = "";
     if (splitCmd[1]) args = yargs(splitCmd[1]);
 
     console.log("Command Received: " + cmd);
-    console.log("Args: " + args);
+    console.log("Args: " + JSON.stringify(args));
 
     if (cmd === "help") {
         helpMessage(args, receivedMsg.channel);
     } else if (cmd === "valorant") {
         createValorant(args, receivedMsg);
     } else if (cmd === "complete") {
-        console.log("Complete command");
+        complete(args, receivedMsg.channel);
     }
+}
+
+/*****************
+ * @function helpMessage
+ * @param args The arguments to the help message
+ * @param channel The message to send the help to
+ *****************/
+function helpMessage(args, channel) {
+    channel.send("This is the help command, brother.");
+}
+
+async function complete(args, textChannel) {
+    if (!args["id"]) {
+        textChannel.send("Error: Complete command must contain --id flag");
+    }
+    let id = args["id"];
+    if (!matchRegistry[id]) {
+        textChannel.send("An invalid ID was provided. Please try again.");
+        return;
+    }
+    const { preChannel, team1, team2 } = matchRegistry[id];
+    await moveMembers(team1, team2, preChannel, preChannel)
+        .then((res) => {
+            textChannel.send("Match " + id + " was concluded").channel;
+            delete matchRegistry[id];
+        })
+        .catch((e) => {
+            textChannel.send(
+                "There was an error moving members to the Pre lobby. Error: " +
+                    e
+            );
+        });
 }
 
 /******************
@@ -63,7 +93,7 @@ function getPlayers(receivedMsg, excludes) {
     preChannel.members.each((v) => {
         participants.push(v);
     });
-    return participants;
+    return { participants: participants, preChannel: preChannel };
 }
 
 /*******************
@@ -134,25 +164,15 @@ function moveMembers(team1, team2, attackChannel, defendChannel) {
     });
 }
 
-/*****************
- * @function helpMessage
- * @param args The arguments to the help message
- * @param channel The message to send the help to
- *****************/
-function helpMessage(args, channel) {
-    if (args.length === 0) {
-        channel.send("This is the help command, brother.");
-    }
-}
-
 /******************
  * @function createValorant
  * @param args The args to the command
  * @param receivedMessage The initial message from the 'message' event
  *****************/
 async function createValorant(args, receivedMessage) {
-    let players = getPlayers(receivedMessage);
-    const { team1, team2, extras, makeTeamsError } = makeTeams(players, 4);
+    const { participants, preChannel } = getPlayers(receivedMessage);
+    console.log(participants);
+    const { team1, team2, extras, makeTeamsError } = makeTeams(participants, 4);
     if (makeTeamsError) {
         receivedMessage.channel.send(
             "Error making Valorant Teams: " + makeTeamsError
@@ -197,12 +217,12 @@ async function createValorant(args, receivedMessage) {
                     matchID +
                     "\nWhen the match is complete, type !complete --id=<MATCHID>."
             );
-            matchRegistry[uuid] = {
-                team1: [...team1Members],
-                team2: [...team2Members],
+            matchRegistry[matchID] = {
+                team1: [...team1],
+                team2: [...team2],
                 map: map,
                 date: new Date().getTime(),
-                complete: false,
+                preChannel: preChannel,
             };
         })
         .catch((error) => {
