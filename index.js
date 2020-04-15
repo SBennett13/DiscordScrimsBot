@@ -183,7 +183,7 @@ async function createValorant(args, receivedMessage) {
             extras.forEach((member) => {
                 extrasMembers.push(member.user.username);
             });
-            let matchID = uuid();
+            let matchID = uuid.v4();
             receivedMessage.channel.send(
                 "Team 1: " +
                     team1Members.join(", ") +
