@@ -39,7 +39,7 @@ function processCommand(receivedMsg){
 function getPlayers(receivedMsg, excludes){
     let participants = []
     const preChannel = receivedMsg.guild.channels.cache.filter(v => v.name === "Side Hoe Quarantine" && v.type === 'voice').first()
-    preChannel.members.each(v => {participants.push(v.user.username)})
+    preChannel.members.each(v => {participants.push(v.user)})
     return participants
 }
 
@@ -80,11 +80,15 @@ function createValorant(args, receivedMessage){
         return
     }
     let map = getMap();
-    const attackChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1A" && v.type === 'voice').first();
-    const defendChannel = receivedMessage.guild.channels.cache.filter(v => v.name === "Scrim1B" && v.type === 'voice').first();
-    //console.log(team1, team2, extras)
 
     receivedMessage.channel.send("Team 1: " + team1.join(", ") + "\nTeam 2: " + team2.join(", ") + "\nReserves: " + extras.join(", ") + "\nMap: " + map)
+
+    console.log(team1, team2, extras, map)
+    let guild = receivedMessage.guild;
+    const attackChannel = guild.channels.cache.filter(v => v.name === "Scrim1A" && v.type === 'voice').first();
+    const defendChannel = guild.channels.cache.filter(v => v.name === "Scrim1B" && v.type === 'voice').first();
+    team1.each(u => {guild.member(u.id).setVoiceChannel(attackChannel.id)})
+    team2.each(u => {guild.member(u.id).setVoiceChannel(defendChannel.id)})
 }
 
 function getRandom(max){
