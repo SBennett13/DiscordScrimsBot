@@ -72,8 +72,8 @@ function processCommand(receivedMsg) {
 function helpMessage(args, channel) {
     channel.send(
         "Syntax: !command --flag=value" +
-            "\nPossible commands: valorant, complete" +
-            "\nType `!command --help` for command options"
+        "\nPossible commands: valorant, complete" +
+        "\nType `!command --help` for command options"
     );
 }
 
@@ -106,7 +106,7 @@ async function complete(args, textChannel) {
         .catch((e) => {
             textChannel.send(
                 "There was an error moving members to the Pre lobby. Error: " +
-                    e
+                e
             );
         });
 }
@@ -118,8 +118,8 @@ async function complete(args, textChannel) {
 function completeHelp(textChannel) {
     textChannel.send(
         "Complete Help: `!complete --flag=value`" +
-            "\nPossible flags:" +
-            "\n`--id`: The ID of the match to complete"
+        "\nPossible flags:" +
+        "\n`--id`: The ID of the match to complete"
     );
 }
 
@@ -132,7 +132,7 @@ function completeHelp(textChannel) {
 function getPlayers(receivedMsg, excludes) {
     let participants = [];
     const preChannel = receivedMsg.guild.channels.cache
-        .filter((v) => v.name === "Side Hoe Quarantine" && v.type === "voice")
+        .filter((v) => v.name === "ScrimPre" && v.type === "voice")
         .first();
     preChannel.members.each((v) => {
         participants.push(v);
@@ -210,8 +210,8 @@ function moveMembers(team, channel) {
 function valorantHelp(textChannel) {
     textChannel.send(
         "Valorant Help: `!valorant --flag=value`" +
-            "\nPossible flags:" +
-            "\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`"
+        "\nPossible flags:" +
+        "\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`"
     );
 }
 
@@ -222,7 +222,7 @@ function valorantHelp(textChannel) {
  *****************/
 async function createValorant(args, receivedMessage) {
     const { participants, preChannel } = getPlayers(receivedMessage);
-    const { team1, team2, makeTeamsError } = makeTeams(participants, 2);
+    const { team1, team2, makeTeamsError } = makeTeams(participants, 5);
     if (makeTeamsError) {
         receivedMessage.channel.send(
             "Error making Valorant Teams: " + makeTeamsError
@@ -254,16 +254,16 @@ async function createValorant(args, receivedMessage) {
             let matchID = uuidv4();
             receivedMessage.channel.send(
                 "Attackers: " +
-                    team1Members.join(", ") +
-                    "\nDefenders: " +
-                    team2Members.join(", ") +
-                    "\nMap: " +
-                    map +
-                    "\nMatchID: " +
-                    matchID +
-                    "\nWhen the match is complete, type `!complete --id=" +
-                    matchID +
-                    "`"
+                team1Members.join(", ") +
+                "\nDefenders: " +
+                team2Members.join(", ") +
+                "\nMap: " +
+                map +
+                "\nMatchID: " +
+                matchID +
+                "\nWhen the match is complete, type `!complete --id=" +
+                matchID +
+                "`"
             );
             matchRegistry[matchID] = {
                 teams: { attack: [...team1], defend: [...team2] },
@@ -275,7 +275,7 @@ async function createValorant(args, receivedMessage) {
         .catch((error) => {
             receivedMessage.channel.send(
                 "There was an error moving users to their channels. Error: " +
-                    error
+                error
             );
         });
 }
