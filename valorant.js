@@ -20,7 +20,7 @@ function valorantHelp(textChannel) {
  *****************/
 async function createValorant(args, receivedMessage, cb) {
     const { participants, preChannel } = getPlayers(receivedMessage);
-    const { team1, team2, makeTeamsError } = makeTeams(participants, 3);
+    const { team1, team2, makeTeamsError } = makeTeams(participants, 5);
     if (makeTeamsError) {
         receivedMessage.channel.send(
             "Error making Valorant Teams: " + makeTeamsError
