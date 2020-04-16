@@ -1,3 +1,8 @@
+/***********************
+ * @author Scott Bennett and Jacob Crouse, scottbennett027@gmail.com
+ * @description A Discord bot to randomize and automate setting up scrims for competitive custom games
+ **********************/
+
 const Discord = require("discord.js");
 const client = new Discord.Client();
 const { v4: uuidv4 } = require("uuid");
@@ -28,6 +33,10 @@ client.on("ready", () => {
     });
 });
 
+/********************
+ * @function processCommand
+ * @param receivedMsg The message received from the 'message' event
+ ********************/
 function processCommand(receivedMsg) {
     let cmd = receivedMsg.content.substr(1);
     let splitCmd = cmd.split(" ", 2);
@@ -41,9 +50,17 @@ function processCommand(receivedMsg) {
     if (cmd === "help") {
         helpMessage(args, receivedMsg.channel);
     } else if (cmd === "valorant") {
-        createValorant(args, receivedMsg);
+        if (args["help"]) {
+            valorantHelp(receivedMsg.channel);
+        } else {
+            createValorant(args, receivedMsg);
+        }
     } else if (cmd === "complete") {
-        complete(args, receivedMsg.channel);
+        if (args["help"]) {
+            completeHelp(receivedMsg.channel);
+        } else {
+            complete(args, receivedMsg.channel);
+        }
     }
 }
 
@@ -53,9 +70,18 @@ function processCommand(receivedMsg) {
  * @param channel The message to send the help to
  *****************/
 function helpMessage(args, channel) {
-    channel.send("This is the help command, brother.");
+    channel.send(
+        "Syntax: !command --flag=value" +
+            "\nPossible commands: valorant, complete" +
+            "\nType `!command --help` for command options"
+    );
 }
 
+/*****************
+ * @function complete
+ * @param args The arguments given to the command
+ * @param textChannel The textChannel the command came from
+ ****************/
 async function complete(args, textChannel) {
     if (!args["id"]) {
         textChannel.send("Error: Complete command must contain --id flag");
@@ -65,8 +91,14 @@ async function complete(args, textChannel) {
         textChannel.send("An invalid ID was provided. Please try again.");
         return;
     }
-    const { preChannel, team1, team2 } = matchRegistry[id];
-    await moveMembers(team1, team2, preChannel, preChannel)
+    const { preChannel, teams } = matchRegistry[id];
+    let returnPromises = [];
+    let allTeams = Object.values(teams);
+    allTeams.forEach((team) => {
+        returnPromises.push(moveMembers(team, preChannel));
+    });
+    Promise.all(returnPromises)
+        //moveMembers(team1, team2, preChannel, preChannel)
         .then((res) => {
             textChannel.send("Match " + id + " was concluded").channel;
             delete matchRegistry[id];
@@ -77,6 +109,18 @@ async function complete(args, textChannel) {
                     e
             );
         });
+}
+
+/******************
+ * @function completeHelp
+ * @param textChannel
+ *****************/
+function completeHelp(textChannel) {
+    textChannel.send(
+        "Complete Help: `!complete --flag=value`" +
+            "\nPossible flags:" +
+            "\n`--id`: The ID of the match to complete"
+    );
 }
 
 /******************
@@ -140,28 +184,35 @@ function getMap(game) {
 
 /******************
  * @function moveMembers
- * @param team1 An array of GuildMembers that is the first team
- * @param team2 An array of GuildMembers that is the second team
- * @param attackChannel The VoiceChannel for the attackers
- * @param defendChannel The VoiceChannel for the defenders
+ * @param team An array of GuildMembers that is the team
+ * @param channel The VoiceChannel for the team
  *****************/
-function moveMembers(team1, team2, attackChannel, defendChannel) {
+function moveMembers(team, channel) {
     return new Promise((resolve, reject) => {
         let teamPromises = [];
-        team1.forEach((u) => {
-            teamPromises.push(u.edit({ channel: attackChannel }));
-        });
-        team2.forEach((u) => {
-            teamPromises.push(u.edit({ channel: defendChannel }));
+        team.forEach((u) => {
+            teamPromises.push(u.edit({ channel: channel }));
         });
         Promise.all(teamPromises)
             .then((res) => {
                 resolve();
             })
-            .catch((e) => {
-                reject(e);
+            .catch((error) => {
+                reject(error);
             });
     });
+}
+
+/******************
+ * @function valorantHelp
+ * @param textChannel The channel the command came from
+ *****************/
+function valorantHelp(textChannel) {
+    textChannel.send(
+        "Valorant Help: `!valorant --flag=value`" +
+            "\nPossible flags:" +
+            "\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`"
+    );
 }
 
 /******************
@@ -171,8 +222,7 @@ function moveMembers(team1, team2, attackChannel, defendChannel) {
  *****************/
 async function createValorant(args, receivedMessage) {
     const { participants, preChannel } = getPlayers(receivedMessage);
-    console.log(participants);
-    const { team1, team2, extras, makeTeamsError } = makeTeams(participants, 4);
+    const { team1, team2, makeTeamsError } = makeTeams(participants, 2);
     if (makeTeamsError) {
         receivedMessage.channel.send(
             "Error making Valorant Teams: " + makeTeamsError
@@ -189,37 +239,34 @@ async function createValorant(args, receivedMessage) {
         .filter((v) => v.name === "Scrim1B" && v.type === "voice")
         .first();
 
-    await moveMembers(team1, team2, attackChannel, defendChannel)
+    let attackerMove = moveMembers(team1, attackChannel),
+        defenderMove = moveMembers(team2, defendChannel);
+    Promise.all([attackerMove, defenderMove])
         .then((res) => {
             let team1Members = [],
-                team2Members = [],
-                extrasMembers = [];
+                team2Members = [];
             team1.forEach((member) => {
                 team1Members.push(member.user.username);
             });
             team2.forEach((member) => {
                 team2Members.push(member.user.username);
             });
-            extras.forEach((member) => {
-                extrasMembers.push(member.user.username);
-            });
             let matchID = uuidv4();
             receivedMessage.channel.send(
-                "Team 1: " +
+                "Attackers: " +
                     team1Members.join(", ") +
-                    "\nTeam 2: " +
+                    "\nDefenders: " +
                     team2Members.join(", ") +
-                    "\nReserve Members: " +
-                    extrasMembers.join(", ") +
                     "\nMap: " +
                     map +
                     "\nMatchID: " +
                     matchID +
-                    "\nWhen the match is complete, type !complete --id=<MATCHID>."
+                    "\nWhen the match is complete, type `!complete --id=" +
+                    matchID +
+                    "`"
             );
             matchRegistry[matchID] = {
-                team1: [...team1],
-                team2: [...team2],
+                teams: { attack: [...team1], defend: [...team2] },
                 map: map,
                 date: new Date().getTime(),
                 preChannel: preChannel,

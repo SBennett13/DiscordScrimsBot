@@ -1,0 +1,10 @@
+---
+version: "2.2"
+services:
+    bot:
+        build:
+            context: .
+            network: host
+        container_name: scrims-bot
+        restart: always
+        net: host
