@@ -1,5 +1,17 @@
-const { getPlayers, makeTeams, moveMembers, getMap } = require("./utils");
+/*******************
+ * A file for Valorant related code
+ ******************/
+
+const {
+    getPlayers,
+    makeTeams,
+    moveMembers,
+    getMap,
+    getLogger,
+} = require("./utils");
 const { v4: uuidv4 } = require("uuid");
+
+const logger = getLogger("valorant");
 
 /******************
  * @function valorantHelp
@@ -19,7 +31,11 @@ function valorantHelp(textChannel) {
  * @param receivedMessage The initial message from the 'message' event
  *****************/
 async function createValorant(args, receivedMessage, cb) {
-    const { participants, preChannel } = getPlayers(receivedMessage);
+    const { participants, preChannel, error } = getPlayers(receivedMessage);
+    if (error) {
+        receivedMessage.channel.send(error);
+        return;
+    }
     const { team1, team2, makeTeamsError } = makeTeams(participants, 5);
     if (makeTeamsError) {
         receivedMessage.channel.send(
@@ -66,8 +82,9 @@ async function createValorant(args, receivedMessage, cb) {
             cb({
                 teams: { attack: [...team1], defend: [...team2] },
                 map: map,
-                date: new Date().getTime(),
+                date: Date.now(),
                 preChannel: preChannel,
+                textChannel: receivedMessage.channel,
                 matchID: matchID,
             });
         })
