@@ -43,10 +43,13 @@ client.on("ready", () => {
  ********************/
 function processCommand(receivedMsg) {
     let cmd = receivedMsg.content.substr(1);
-    let splitCmd = cmd.split(" ", 2);
-    cmd = splitCmd[0];
+    let spaceIndex = cmd.indexOf(" ");
     let args = "";
-    if (splitCmd[1]) args = yargs(splitCmd[1]);
+    if (spaceIndex !== -1) {
+        args = cmd.substr(spaceIndex + 1);
+        cmd = cmd.substr(0, spaceIndex);
+    }
+    if (args) args = yargs(args);
 
     logger.info("Command Received: " + cmd + "; Args: " + JSON.stringify(args));
 
@@ -73,7 +76,7 @@ function processCommand(receivedMsg) {
         if (args["help"]) {
             initHelp(receivedMsg.channel);
         } else {
-            init(receivedMsg.guild, (err) => {
+            init(args, receivedMsg.guild, (err) => {
                 if (err) {
                     logger.error(err);
                     receivedMsg.channel.send("Error during init: " + err);

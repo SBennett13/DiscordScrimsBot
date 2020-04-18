@@ -144,10 +144,16 @@ function getLogger(name) {
  * @function init
  * @param guild The guild to add voice channels to
  ***********************/
-function init(guild, cb) {
-    let preLobbyPromise = makeChannel(guild, "ScrimPre");
-    let scrim1Promise = makeChannel(guild, "Scrim1A");
-    let scrim2Promise = makeChannel(guild, "Scrim1B");
+function init(args, guild, cb) {
+    let par = null;
+    if (args["category"]) {
+        par = guild.channels.cache
+            .filter((v) => v.name === args["category"])
+            .first();
+    }
+    let preLobbyPromise = makeChannel(guild, "ScrimPre", par);
+    let scrim1Promise = makeChannel(guild, "Scrim1A", par);
+    let scrim2Promise = makeChannel(guild, "Scrim1B", par);
     Promise.all([preLobbyPromise, scrim1Promise, scrim2Promise])
         .then((res) => {
             cb(null);
@@ -160,8 +166,10 @@ function init(guild, cb) {
 
 function initHelp(textChannel) {
     textChannel.send(
-        "Init Help: `!init`" +
-            "\nCreates 3 Voice channels: A pregame lobby, and two in-game lobbies."
+        "Init Help: `!init --flag=value ...`" +
+            "\nDescription: Creates 3 Voice channels: A pregame lobby, and two in-game lobbies." +
+            "\nPossible flags:" +
+            '\n`--category`: Channel category to place voice channels under, must be in quotes if category name has spaces. (ie. `!init --category="Voice Channels"`)'
     );
 }
 
@@ -170,7 +178,7 @@ function initHelp(textChannel) {
  * @param guild The guild to make a channel in
  * @param name The name to set for the channel
  *****************/
-function makeChannel(guild, name) {
+function makeChannel(guild, name, parentChannel) {
     if (
         !guild.channels.cache
             .filter((v) => v.name === name && v.type === "voice")
@@ -179,6 +187,7 @@ function makeChannel(guild, name) {
         return guild.channels.create(name, {
             type: "voice",
             reason: "Created by Scrims Bot",
+            parent: parentChannel,
         });
     else
         return new Promise((resolve, reject) => {
@@ -191,6 +200,7 @@ module.exports = {
     getPlayers: getPlayers,
     getMap: getMap,
     moveMembers: moveMembers,
+    moveMember: moveMember,
     getRandom: getRandom,
     getLogger: getLogger,
     init: init,

@@ -19,7 +19,8 @@ const logger = getLogger("valorant");
  *****************/
 function valorantHelp(textChannel) {
     textChannel.send(
-        "Valorant Help: `!valorant --flag=value`" +
+        "Valorant Help: `!valorant --flag=value ...`" +
+            "\nDescription: Initiates a new Valorant scrim." +
             "\nPossible flags:" +
             "\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`"
     );
