@@ -8,3 +8,4 @@ A bot to randomize and ease scrimming games; primarily Valorant
 
 -   Streamline errors to make sure everything works properly
 -   Ask friends for input
+-   Track and autogenerate in-game rooms as needed
