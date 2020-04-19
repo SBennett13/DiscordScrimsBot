@@ -2,7 +2,7 @@
  * A utils file for basic team making utilities
  **********************/
 
-const winston = require("winston");
+const winston = require('winston');
 
 /*****************
  * @function getMap
@@ -10,9 +10,11 @@ const winston = require("winston");
  * @returns A random map for the chosen game
  */
 function getMap(game) {
-    let mapList = ["Split", "Bind", "Haven"];
-    let rand = getRandom(mapList.length);
-    return mapList[rand];
+    if (game === 'valorant') {
+        let mapList = ['Split', 'Bind', 'Haven'];
+        let rand = getRandom(mapList.length);
+        return mapList[rand];
+    } else return null;
 }
 
 /******************
@@ -21,13 +23,13 @@ function getMap(game) {
  * @param excludes An array of users to exclude from the team choosing
  * @returns An array of GuildMembers representing all players eligible to play
  *****************/
-function getPlayers(receivedMsg, excludes) {
+function getPlayers(guild, excludes = []) {
     let participants = [];
 
     // Get the pregame channel and members to an array
     // Only not self/server deaf players
-    const preChannel = receivedMsg.guild.channels.cache
-        .filter((v) => v.name === "ScrimPre" && v.type === "voice")
+    const preChannel = guild.channels.cache
+        .filter((v) => v.name === 'ScrimPre' && v.type === 'voice')
         .first();
     if (!preChannel) {
         return {
@@ -36,7 +38,12 @@ function getPlayers(receivedMsg, excludes) {
         };
     }
     preChannel.members.each((v) => {
-        if (!v.voice.deaf) participants.push(v);
+        if (
+            !v.voice.deaf &&
+            !excludes.includes(v.nickname) &&
+            !excludes.includes(v.displayName)
+        )
+            participants.push(v);
     });
 
     return { participants: participants, preChannel: preChannel };
@@ -50,11 +57,11 @@ function getPlayers(receivedMsg, excludes) {
  ******************/
 function makeTeams(allPlayers, teamSize) {
     if (allPlayers.length < teamSize * 2) {
-        return { makeTeamsError: "Too few players" };
+        return { makeTeamsError: 'Too few players' };
     }
     let team1 = [],
         team2 = [],
-        remainingPlayers = [...allPlayers];
+        remainingPlayers = allPlayers;
     while (team2.length < teamSize) {
         let rand = getRandom(remainingPlayers.length);
         team1.push(remainingPlayers[rand]);
@@ -70,7 +77,7 @@ function makeTeams(allPlayers, teamSize) {
             ...remainingPlayers.slice(rand + 1),
         ];
     }
-    return { team1: team1, team2: team2, extras: remainingPlayers };
+    return { team1: team1, team2: team2 };
 }
 
 /******************
@@ -120,11 +127,11 @@ function getRandom(max) {
  ***********************/
 function getLogger(name) {
     return winston.createLogger({
-        level: "info",
+        level: 'info',
         format: winston.format.combine(
             winston.format.timestamp(),
             winston.format.printf(({ level, timestamp, message }) => {
-                let datetime = timestamp.split("T");
+                let datetime = timestamp.split('T');
                 let date = datetime[0],
                     time = datetime[1].substring(0, datetime[1].length - 1);
                 return `${date}|${time} [${name.toLocaleUpperCase()}|${level.toLocaleUpperCase()}]: ${message}`;
@@ -146,29 +153,29 @@ function getLogger(name) {
  ***********************/
 function init(args, guild, cb) {
     let par = null;
-    if (args["category"]) {
+    if (args['category']) {
         par = guild.channels.cache
-            .filter((v) => v.name === args["category"])
+            .filter((v) => v.name === args['category'])
             .first();
     }
-    let preLobbyPromise = makeChannel(guild, "ScrimPre", par);
-    let scrim1Promise = makeChannel(guild, "Scrim1A", par);
-    let scrim2Promise = makeChannel(guild, "Scrim1B", par);
+    let preLobbyPromise = makeChannel(guild, 'ScrimPre', par);
+    let scrim1Promise = makeChannel(guild, 'Scrim1A', par);
+    let scrim2Promise = makeChannel(guild, 'Scrim1B', par);
     Promise.all([preLobbyPromise, scrim1Promise, scrim2Promise])
         .then((res) => {
             cb(null);
         })
         .catch((err) => {
-            console.log("Catch: ", err);
+            console.log('Catch: ', err);
             cb(err);
         });
 }
 
 function initHelp(textChannel) {
     textChannel.send(
-        "Init Help: `!init --flag=value ...`" +
-            "\nDescription: Creates 3 Voice channels: A pregame lobby, and two in-game lobbies." +
-            "\nPossible flags:" +
+        'Init Help: `!init --flag=value ...`' +
+            '\nDescription: Creates 3 Voice channels: A pregame lobby, and two in-game lobbies.' +
+            '\nPossible flags:' +
             '\n`--category`: Channel category to place voice channels under, must be in quotes if category name has spaces. (ie. `!init --category="Voice Channels"`)'
     );
 }
@@ -181,17 +188,17 @@ function initHelp(textChannel) {
 function makeChannel(guild, name, parentChannel) {
     if (
         !guild.channels.cache
-            .filter((v) => v.name === name && v.type === "voice")
+            .filter((v) => v.name === name && v.type === 'voice')
             .first()
     )
         return guild.channels.create(name, {
-            type: "voice",
-            reason: "Created by Scrims Bot",
+            type: 'voice',
+            reason: 'Created by Scrims Bot',
             parent: parentChannel,
         });
     else
         return new Promise((resolve, reject) => {
-            resolve("Channel already exists");
+            resolve('Channel already exists');
         });
 }
 
