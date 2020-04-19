@@ -8,10 +8,10 @@ const {
     moveMembers,
     getMap,
     getLogger,
-} = require("./utils");
-const { v4: uuidv4 } = require("uuid");
+} = require('./utils');
+const { v4: uuidv4 } = require('uuid');
 
-const logger = getLogger("valorant");
+const logger = getLogger('valorant');
 
 /******************
  * @function valorantHelp
@@ -19,10 +19,10 @@ const logger = getLogger("valorant");
  *****************/
 function valorantHelp(textChannel) {
     textChannel.send(
-        "Valorant Help: `!valorant --flag=value ...`" +
-            "\nDescription: Initiates a new Valorant scrim." +
-            "\nPossible flags:" +
-            "\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`"
+        'Valorant Help: `!valorant --flag=value ...`' +
+            '\nDescription: Initiates a new Valorant scrim.' +
+            '\nPossible flags:' +
+            '\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`'
     );
 }
 
@@ -31,27 +31,33 @@ function valorantHelp(textChannel) {
  * @param args The args to the command
  * @param receivedMessage The initial message from the 'message' event
  *****************/
-async function createValorant(args, receivedMessage, cb) {
-    const { participants, preChannel, error } = getPlayers(receivedMessage);
+async function createValorant(args, guild, cb) {
+    let excludes = [];
+    if (args['e']) excludes = args['e'].split(',');
+    const { participants, preChannel, error } = getPlayers(guild, excludes);
     if (error) {
-        receivedMessage.channel.send(error);
+        logger.error(error);
+        cb({ error: error });
         return;
     }
     const { team1, team2, makeTeamsError } = makeTeams(participants, 5);
     if (makeTeamsError) {
-        receivedMessage.channel.send(
-            "Error making Valorant Teams: " + makeTeamsError
-        );
+        logger.error(makeTeamsError);
+        cb({ error: makeTeamsError });
         return;
     }
-    let map = getMap();
+    let map = getMap('valorant');
+    if (map === null) {
+        logger.error('Unable to select a map.');
+        cb({ error: 'Unable to select a map. Contact an admin.' });
+        return;
+    }
 
-    let guild = receivedMessage.guild;
     const attackChannel = guild.channels.cache
-        .filter((v) => v.name === "Scrim1A" && v.type === "voice")
+        .filter((v) => v.name === 'Scrim1A' && v.type === 'voice')
         .first();
     const defendChannel = guild.channels.cache
-        .filter((v) => v.name === "Scrim1B" && v.type === "voice")
+        .filter((v) => v.name === 'Scrim1B' && v.type === 'voice')
         .first();
 
     let attackerMove = moveMembers(team1, attackChannel),
@@ -67,33 +73,38 @@ async function createValorant(args, receivedMessage, cb) {
                 team2Members.push(member.user.username);
             });
             let matchID = uuidv4();
-            receivedMessage.channel.send(
-                "Attackers: " +
-                    team1Members.join(", ") +
-                    "\nDefenders: " +
-                    team2Members.join(", ") +
-                    "\nMap: " +
-                    map +
-                    "\nMatchID: " +
-                    matchID +
-                    "\nWhen the match is complete, type `!complete --id=" +
-                    matchID +
-                    "`"
+            let response =
+                'Attackers: ' +
+                team1Members.join(', ') +
+                '\nDefenders: ' +
+                team2Members.join(', ') +
+                '\nMap: ' +
+                map +
+                '\nMatchID: ' +
+                matchID +
+                '\nWhen the match is complete, type `!complete --id=' +
+                matchID +
+                '`';
+            logger.info(
+                'New Match Registered: \n' +
+                    JSON.stringify({ matchID: matchID, date: new Date() })
             );
             cb({
                 teams: { attack: [...team1], defend: [...team2] },
                 map: map,
                 date: Date.now(),
                 preChannel: preChannel,
-                textChannel: receivedMessage.channel,
                 matchID: matchID,
+                msg: response,
             });
         })
         .catch((error) => {
-            receivedMessage.channel.send(
-                "There was an error moving users to their channels. Error: " +
-                    error
-            );
+            logger.error('Error moving users to their channels: ' + error);
+            cb({
+                error:
+                    'There was an error moving users to their channels. Error: ' +
+                    error,
+            });
         });
 }
 
