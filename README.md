@@ -6,6 +6,7 @@ A bot to randomize and ease scrimming games; primarily Valorant
 
 ### TODO:
 
--   Streamline errors to make sure everything works properly
 -   Ask friends for input
 -   Track and autogenerate in-game rooms as needed
+-   Designate volume mount for external logs access
+-   Integrate a healthcheck for the container
