@@ -67,6 +67,7 @@ function processCommand(receivedMsg) {
                         msg = res.msg;
                     delete res.matchID;
                     delete res.msg;
+                    res['textChannel'] = receivedMsg.channel;
                     matchRegistry[matchId] = res;
                     receivedMsg.channel.send(msg);
                 }
