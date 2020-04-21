@@ -60,17 +60,28 @@ async function createValorant(args, guild, cb) {
         .filter((v) => v.name === 'Scrim1B' && v.type === 'voice')
         .first();
 
+    if (!attackChannel || !defendChannel) {
+        cb({
+            error:
+                "Either the attacker or the defenders channel doesn't exist. Please run !init",
+        });
+    }
+
     let attackerMove = moveMembers(team1, attackChannel),
         defenderMove = moveMembers(team2, defendChannel);
     Promise.all([attackerMove, defenderMove])
         .then((res) => {
             let team1Members = [],
-                team2Members = [];
+                team2Members = [],
+                playerIds = [];
+
             team1.forEach((member) => {
                 team1Members.push(member.user.username);
+                playerIds.push(member.id);
             });
             team2.forEach((member) => {
                 team2Members.push(member.user.username);
+                playerIds.push(member.id);
             });
             let matchID = uuidv4();
             let response =
@@ -90,10 +101,10 @@ async function createValorant(args, guild, cb) {
                     JSON.stringify({ matchID: matchID, date: new Date() })
             );
             cb({
-                teams: { attack: [...team1], defend: [...team2] },
+                playerIDs: playerIds,
                 map: map,
                 date: Date.now(),
-                preChannel: preChannel,
+                preChannel: preChannel.id,
                 matchID: matchID,
                 msg: response,
             });

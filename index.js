@@ -67,7 +67,7 @@ function processCommand(receivedMsg) {
                         msg = res.msg;
                     delete res.matchID;
                     delete res.msg;
-                    res['textChannel'] = receivedMsg.channel;
+                    res['textChannel'] = receivedMsg.channel.id;
                     matchRegistry[matchId] = res;
                     receivedMsg.channel.send(msg);
                 }
@@ -102,10 +102,26 @@ function processCommand(receivedMsg) {
 let matchAgeInterval = setInterval(() => {
     Object.keys(matchRegistry).forEach((v) => {
         if (Date.now() - matchRegistry[v].date > 7200000) {
-            matchRegistry[v].textChannel.send(
-                `Match ${matchRegistry[v].matchID} has been going for over 2 hours...I'm deleting it from the registry.`
-            );
-            delete matchRegistry[v];
+            // Fetch the original text channel, if it can be fetched, send the expiration
+            // message to the channel, if not, log the error anyway. Delete the match either way
+            client.channels
+                .fetch(v)
+                .then((textChannel) => {
+                    textChannel.send(
+                        `Match ${matchRegistry[v].matchID} has been going for over 2 hours...I'm deleting it from the registry.`
+                    );
+                })
+                .catch((error) => {
+                    logger.error(
+                        'There was an fetching the text channel for Match ' +
+                            v +
+                            '. Deleting the match anyway. Error: ' +
+                            error
+                    );
+                })
+                .finally(() => {
+                    delete matchRegistry[v];
+                });
         }
     });
 }, 1800);
@@ -150,10 +166,13 @@ async function complete(args, textChannel) {
         textChannel.send('An invalid ID was provided. Please try again.');
         return;
     }
-    const { preChannel, teams } = matchRegistry[id];
+
+    // ! FIX THIS!!!!
+    const { preChannel, playerIDs } = matchRegistry[id];
+    let preChannelObj = client.channels.fetch(preChannel);
+    let getMemberPromises = playerIDs.map(v => client.)
     let returnPromises = [];
-    let allTeams = Object.values(teams);
-    allTeams.forEach((team) => {
+    playerIDs.forEach((team) => {
         returnPromises.push(moveMembers(team, preChannel));
     });
     Promise.all(returnPromises)
