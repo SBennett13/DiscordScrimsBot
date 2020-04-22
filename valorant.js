@@ -8,10 +8,10 @@ const {
     moveMembers,
     getMap,
     getLogger,
-} = require('./utils');
-const { v4: uuidv4 } = require('uuid');
+} = require("./utils");
+const { v4: uuidv4 } = require("uuid");
 
-const logger = getLogger('valorant');
+const logger = getLogger("valorant");
 
 /******************
  * @function valorantHelp
@@ -19,10 +19,10 @@ const logger = getLogger('valorant');
  *****************/
 function valorantHelp(textChannel) {
     textChannel.send(
-        'Valorant Help: `!valorant --flag=value ...`' +
-            '\nDescription: Initiates a new Valorant scrim.' +
-            '\nPossible flags:' +
-            '\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`'
+        "Valorant Help: `!valorant --flag=value ...`" +
+            "\nDescription: Initiates a new Valorant scrim." +
+            "\nPossible flags:" +
+            "\n`--e`: Players to exclude from team selection present in the pregame channel; comma separated. `!valorant --e=Scott,Jacob`"
     );
 }
 
@@ -33,7 +33,7 @@ function valorantHelp(textChannel) {
  *****************/
 async function createValorant(args, guild, cb) {
     let excludes = [];
-    if (args['e']) excludes = args['e'].split(',');
+    if (args["e"]) excludes = args["e"].split(",");
     const { participants, preChannel, error } = getPlayers(guild, excludes);
     if (error) {
         logger.error(error);
@@ -46,18 +46,18 @@ async function createValorant(args, guild, cb) {
         cb({ error: makeTeamsError });
         return;
     }
-    let map = getMap('valorant');
+    let map = getMap("valorant");
     if (map === null) {
-        logger.error('Unable to select a map.');
-        cb({ error: 'Unable to select a map. Contact an admin.' });
+        logger.error("Unable to select a map.");
+        cb({ error: "Unable to select a map. Contact an admin." });
         return;
     }
 
     const attackChannel = guild.channels.cache
-        .filter((v) => v.name === 'Scrim1A' && v.type === 'voice')
+        .filter((v) => v.name === "Scrim1A" && v.type === "voice")
         .first();
     const defendChannel = guild.channels.cache
-        .filter((v) => v.name === 'Scrim1B' && v.type === 'voice')
+        .filter((v) => v.name === "Scrim1B" && v.type === "voice")
         .first();
 
     if (!attackChannel || !defendChannel) {
@@ -85,19 +85,19 @@ async function createValorant(args, guild, cb) {
             });
             let matchID = uuidv4();
             let response =
-                'Attackers: ' +
-                team1Members.join(', ') +
-                '\nDefenders: ' +
-                team2Members.join(', ') +
-                '\nMap: ' +
+                "Attackers: " +
+                team1Members.join(", ") +
+                "\nDefenders: " +
+                team2Members.join(", ") +
+                "\nMap: " +
                 map +
-                '\nMatchID: ' +
+                "\nMatchID: " +
                 matchID +
-                '\nWhen the match is complete, type `!complete --id=' +
+                "\nWhen the match is complete, type `!complete --id=" +
                 matchID +
-                '`';
+                "`";
             logger.info(
-                'New Match Registered: \n' +
+                "New Match Registered: \n" +
                     JSON.stringify({ matchID: matchID, date: new Date() })
             );
             cb({
@@ -111,10 +111,10 @@ async function createValorant(args, guild, cb) {
             });
         })
         .catch((error) => {
-            logger.error('Error moving users to their channels: ' + error);
+            logger.error("Error moving users to their channels: " + error);
             cb({
                 error:
-                    'There was an error moving users to their channels. Error: ' +
+                    "There was an error moving users to their channels. Error: " +
                     error,
             });
         });
