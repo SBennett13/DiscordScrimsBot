@@ -94,6 +94,8 @@ function processCommand(receivedMsg) {
                 }
             });
         }
+    } else if (cmd === 'test') {
+        test(receivedMsg);
     }
 }
 
@@ -160,6 +162,7 @@ function completeHelp(textChannel) {
 async function complete(args, textChannel) {
     if (!args['id']) {
         textChannel.send('Error: Complete command must contain --id flag');
+        return;
     }
     let id = args['id'];
     if (!matchRegistry[id]) {
@@ -167,25 +170,41 @@ async function complete(args, textChannel) {
         return;
     }
 
-    // ! FIX THIS!!!!
-    const { preChannel, playerIDs } = matchRegistry[id];
-    let preChannelObj = client.channels.fetch(preChannel);
-    let getMemberPromises = playerIDs.map(v => client.)
-    let returnPromises = [];
-    playerIDs.forEach((team) => {
-        returnPromises.push(moveMembers(team, preChannel));
-    });
-    Promise.all(returnPromises)
-        //moveMembers(team1, team2, preChannel, preChannel)
-        .then((res) => {
-            textChannel.send('Match ' + id + ' was concluded').channel;
-            delete matchRegistry[id];
+    const { preChannelID, playerIDs, guildID } = matchRegistry[id];
+    let guild = client.guilds.resolve(guildID);
+    let guildMembersPromises = [];
+
+    // results = guild
+    guild
+        .fetch()
+        .then((guildObj) => {
+            playerIDs.forEach((id) => {
+                guildMembersPromises.push(guildObj.members.fetch(id));
+            });
+            // guildMembersPromises = [GuildMembers]
+            Promise.all(guildMembersPromises)
+                .then((guildMembers) => {
+                    guildMembers.forEach((member) => {
+                        // Just attempt to move each. if it fail, oh well
+                        member.edit({ channel: preChannelID }).catch((err) => {
+                            logger.error(
+                                `Error moving member ${member.id}: ${err}`
+                            );
+                        });
+                    });
+                })
+                .catch((err) => {
+                    logger.error(
+                        'Error fetching GuildMembers post-game: ' + err
+                    );
+                });
         })
-        .catch((e) => {
-            textChannel.send(
-                'There was an error moving members to the Pre lobby. Error: ' +
-                    e
-            );
+        .catch((err) => {
+            logger.error('Error fetching guild: ' + err);
+        })
+        .finally(() => {
+            textChannel.send(`Deleting Match ${id} from the registry`);
+            delete matchRegistry[id];
         });
 }
 
