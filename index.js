@@ -3,35 +3,35 @@
  * @description A Discord bot to randomize and automate setting up scrims for competitive custom games
  **********************/
 
-const Discord = require('discord.js');
+const Discord = require("discord.js");
 const client = new Discord.Client();
 
-const yargs = require('yargs-parser');
-const secrets = require('./secrets');
+const yargs = require("yargs-parser");
+const secrets = require("./secrets");
 
-const { createValorant, valorantHelp } = require('./valorant');
-const { moveMembers, getLogger, initHelp, init } = require('./utils');
-const logger = getLogger('main');
+const { createValorant, valorantHelp } = require("./valorant");
+const { moveMember, getLogger, initHelp, init } = require("./utils");
+const logger = getLogger("main");
 
 // Use this to keep track of matches down the road....
 let matchRegistry = {};
 
-client.on('ready', () => {
-    logger.info('Client Ready');
+client.on("ready", () => {
+    logger.info("Client Ready");
 
     client.user
-        .setActivity('!help for help', { type: 'WATCHING' })
+        .setActivity("!help for help", { type: "WATCHING" })
         .catch((e) => {
-            console.log('Error setting activity: ' + e);
+            console.log("Error setting activity: " + e);
         });
-    client.on('message', (receivedMessage) => {
+    client.on("message", (receivedMessage) => {
         // Prevent bot from responding to its own messages
         if (receivedMessage.author == client.user) {
             return;
         }
 
         // Check for command
-        if (receivedMessage.content.startsWith('!')) {
+        if (receivedMessage.content.startsWith("!")) {
             processCommand(receivedMessage);
         }
     });
@@ -43,20 +43,20 @@ client.on('ready', () => {
  ********************/
 function processCommand(receivedMsg) {
     let cmd = receivedMsg.content.substr(1);
-    let spaceIndex = cmd.indexOf(' ');
-    let args = '';
+    let spaceIndex = cmd.indexOf(" ");
+    let args = "";
     if (spaceIndex !== -1) {
         args = cmd.substr(spaceIndex + 1);
         cmd = cmd.substr(0, spaceIndex);
     }
     if (args) args = yargs(args);
 
-    logger.info('Command Received: ' + cmd + '; Args: ' + JSON.stringify(args));
+    logger.info("Command Received: " + cmd + "; Args: " + JSON.stringify(args));
 
-    if (cmd === 'help') {
+    if (cmd === "help") {
         helpMessage(args, receivedMsg.channel);
-    } else if (cmd === 'valorant') {
-        if (args['help']) {
+    } else if (cmd === "valorant") {
+        if (args["help"]) {
             valorantHelp(receivedMsg.channel);
         } else {
             createValorant(args, receivedMsg.guild, (res) => {
@@ -67,35 +67,35 @@ function processCommand(receivedMsg) {
                         msg = res.msg;
                     delete res.matchID;
                     delete res.msg;
-                    res['textChannel'] = receivedMsg.channel.id;
+                    res["textChannel"] = receivedMsg.channel.id;
                     matchRegistry[matchId] = res;
                     receivedMsg.channel.send(msg);
                 }
             });
         }
-    } else if (cmd === 'complete') {
-        if (args['help']) {
+    } else if (cmd === "complete") {
+        if (args["help"]) {
             completeHelp(receivedMsg.channel);
         } else {
             complete(args, receivedMsg.channel);
         }
-    } else if (cmd === 'init') {
-        if (args['help']) {
+    } else if (cmd === "init") {
+        if (args["help"]) {
             initHelp(receivedMsg.channel);
         } else {
             init(args, receivedMsg.guild, (err) => {
                 if (err) {
                     logger.error(err);
-                    receivedMsg.channel.send('Error during init: ' + err);
+                    receivedMsg.channel.send("Error during init: " + err);
                 } else {
                     receivedMsg.channel.send(
-                        'Channels successfully created :)'
+                        "Channels successfully created :)"
                     );
                 }
             });
         }
-    } else if (cmd === 'test') {
-        test(receivedMsg);
+    } else {
+        logger.info("Unrecognized command: " + receivedMsg.content);
     }
 }
 
@@ -106,27 +106,18 @@ let matchAgeInterval = setInterval(() => {
         if (Date.now() - matchRegistry[v].date > 7200000) {
             // Fetch the original text channel, if it can be fetched, send the expiration
             // message to the channel, if not, log the error anyway. Delete the match either way
-            client.channels
-                .fetch(v)
-                .then((textChannel) => {
-                    textChannel.send(
-                        `Match ${matchRegistry[v].matchID} has been going for over 2 hours...I'm deleting it from the registry.`
-                    );
-                })
-                .catch((error) => {
-                    logger.error(
-                        'There was an fetching the text channel for Match ' +
-                            v +
-                            '. Deleting the match anyway. Error: ' +
-                            error
-                    );
-                })
-                .finally(() => {
-                    delete matchRegistry[v];
-                });
+            let guild = client.guilds.resolve(matchRegistry[v].guildID);
+            let textChannel = guild.channels.resolve(
+                matchRegistry[v].textChannel
+            );
+            textChannel.send(
+                `Match ${v} has been going for over 2 hours...I'm deleting it from the registry.`
+            );
+
+            delete matchRegistry[v];
         }
     });
-}, 1800);
+}, 1800000);
 
 /*****************
  * @function helpMessage
@@ -135,9 +126,9 @@ let matchAgeInterval = setInterval(() => {
  *****************/
 function helpMessage(args, channel) {
     channel.send(
-        'Syntax: !command --flag=value' +
-            '\nPossible commands: valorant, complete' +
-            '\nType `!command --help` for command options'
+        "Syntax: !command --flag=value" +
+            "\nPossible commands: valorant, complete" +
+            "\nType `!command --help` for command options"
     );
 }
 
@@ -147,10 +138,10 @@ function helpMessage(args, channel) {
  *****************/
 function completeHelp(textChannel) {
     textChannel.send(
-        'Complete Help: `!complete --flag=value`' +
-            '\nUsed to tell the bot that the match has concluded' +
-            '\nPossible flags:' +
-            '\n`--id`: The ID of the match to complete'
+        "Complete Help: `!complete --flag=value`" +
+            "\nUsed to tell the bot that the match has concluded" +
+            "\nPossible flags:" +
+            "\n`--id`: The ID of the match to complete"
     );
 }
 
@@ -160,13 +151,13 @@ function completeHelp(textChannel) {
  * @param textChannel The textChannel the command came from
  ****************/
 async function complete(args, textChannel) {
-    if (!args['id']) {
-        textChannel.send('Error: Complete command must contain --id flag');
+    if (!args["id"]) {
+        textChannel.send("Error: Complete command must contain --id flag");
         return;
     }
-    let id = args['id'];
+    let id = args["id"];
     if (!matchRegistry[id]) {
-        textChannel.send('An invalid ID was provided. Please try again.');
+        textChannel.send("An invalid ID was provided. Please try again.");
         return;
     }
 
@@ -186,7 +177,7 @@ async function complete(args, textChannel) {
                 .then((guildMembers) => {
                     guildMembers.forEach((member) => {
                         // Just attempt to move each. if it fail, oh well
-                        member.edit({ channel: preChannelID }).catch((err) => {
+                        moveMember(member, preChannelID).catch((err) => {
                             logger.error(
                                 `Error moving member ${member.id}: ${err}`
                             );
@@ -195,15 +186,15 @@ async function complete(args, textChannel) {
                 })
                 .catch((err) => {
                     logger.error(
-                        'Error fetching GuildMembers post-game: ' + err
+                        "Error fetching GuildMembers post-game: " + err
                     );
                 });
         })
         .catch((err) => {
-            logger.error('Error fetching guild: ' + err);
+            logger.error("Error fetching guild: " + err);
         })
         .finally(() => {
-            textChannel.send(`Deleting Match ${id} from the registry`);
+            textChannel.send(`Deleted Match ${id} from the registry`);
             delete matchRegistry[id];
         });
 }
