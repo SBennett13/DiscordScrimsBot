@@ -101,10 +101,11 @@ async function createValorant(args, guild, cb) {
                     JSON.stringify({ matchID: matchID, date: new Date() })
             );
             cb({
+                guildID: guild.id,
                 playerIDs: playerIds,
                 map: map,
                 date: Date.now(),
-                preChannel: preChannel.id,
+                preChannelID: preChannel.id,
                 matchID: matchID,
                 msg: response,
             });
