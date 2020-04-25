@@ -8,10 +8,26 @@ const {
     moveMembers,
     getMap,
     getLogger,
+    makeVoiceChannel,
 } = require("./utils");
+const { uniqueNamesGenerator, adjectives } = require("unique-names-generator");
+const constants = require("./constants");
 const { v4: uuidv4 } = require("uuid");
 
 const logger = getLogger("valorant");
+
+const characters = [
+    "jett",
+    "phoenix",
+    "raze",
+    "viper",
+    "cypher",
+    "brimstone",
+    "breach",
+    "sage",
+    "sova",
+    "omen",
+];
 
 /******************
  * @function valorantHelp
@@ -53,12 +69,31 @@ async function createValorant(args, guild, cb) {
         return;
     }
 
-    const attackChannel = guild.channels.cache
-        .filter((v) => v.name === "Scrim1A" && v.type === "voice")
+    let parent = guild.channels.cache
+        .filter(
+            (v) => v.name === constants.CategoryName && v.type === "category"
+        )
         .first();
-    const defendChannel = guild.channels.cache
-        .filter((v) => v.name === "Scrim1B" && v.type === "voice")
-        .first();
+    if (!parent) {
+        cb({
+            error:
+                "Could not find the PUGs channel category, try running `!init`. Contact an admin if the problem persists.",
+        });
+        return;
+    }
+    let parentID = parent.id;
+
+    const team1Name = uniqueNamesGenerator({
+        dictionaries: [adjectives, characters],
+        length: 2,
+    });
+    const team2Name = uniqueNamesGenerator({
+        dictionaries: [adjectives, characters],
+        length: 2,
+    });
+
+    const attackChannel = await makeVoiceChannel(guild, team1Name, parentID);
+    const defendChannel = await makeVoiceChannel(guild, team2Name, parentID);
 
     if (!attackChannel || !defendChannel) {
         cb({
@@ -85,9 +120,13 @@ async function createValorant(args, guild, cb) {
             });
             let matchID = uuidv4();
             let response =
-                "Attackers: " +
+                "Attackers (" +
+                team1Name +
+                "): " +
                 team1Members.join(", ") +
-                "\nDefenders: " +
+                "\nDefenders (" +
+                team2Name +
+                "): " +
                 team2Members.join(", ") +
                 "\nMap: " +
                 map +
@@ -103,6 +142,7 @@ async function createValorant(args, guild, cb) {
             cb({
                 guildID: guild.id,
                 playerIDs: playerIds,
+                voiceChannelIDs: [attackChannel.id, defendChannel.id],
                 map: map,
                 date: Date.now(),
                 preChannelID: preChannel.id,

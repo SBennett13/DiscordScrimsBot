@@ -10,6 +10,7 @@
     "license": "ISC",
     "dependencies": {
         "discord.js": "^12.1.1",
+        "unique-names-generator": "^4.2.0",
         "uuid": "^7.0.3",
         "winston": "^3.2.1",
         "yargs-parser": "^18.1.2"

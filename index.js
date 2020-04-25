@@ -10,7 +10,13 @@ const yargs = require("yargs-parser");
 const secrets = require("./secrets");
 
 const { createValorant, valorantHelp } = require("./valorant");
-const { moveMember, getLogger, initHelp, init } = require("./utils");
+const {
+    moveMember,
+    getLogger,
+    initHelp,
+    init,
+    deleteWhenEmpty,
+} = require("./utils");
 const logger = getLogger("main");
 
 // Use this to keep track of matches down the road....
@@ -26,7 +32,7 @@ client.on("ready", () => {
         });
     client.on("message", (receivedMessage) => {
         // Prevent bot from responding to its own messages
-        if (receivedMessage.author == client.user) {
+        if (receivedMessage.author === client.user) {
             return;
         }
 
@@ -83,7 +89,7 @@ function processCommand(receivedMsg) {
         if (args["help"]) {
             initHelp(receivedMsg.channel);
         } else {
-            init(args, receivedMsg.guild, (err) => {
+            init(receivedMsg.guild, (err) => {
                 if (err) {
                     logger.error(err);
                     receivedMsg.channel.send("Error during init: " + err);
@@ -150,7 +156,7 @@ function completeHelp(textChannel) {
  * @param args The arguments given to the command
  * @param textChannel The textChannel the command came from
  ****************/
-async function complete(args, textChannel) {
+function complete(args, textChannel) {
     if (!args["id"]) {
         textChannel.send("Error: Complete command must contain --id flag");
         return;
@@ -161,11 +167,12 @@ async function complete(args, textChannel) {
         return;
     }
 
-    const { preChannelID, playerIDs, guildID } = matchRegistry[id];
+    const { preChannelID, playerIDs, guildID, voiceChannelIDs } = matchRegistry[
+        id
+    ];
     let guild = client.guilds.resolve(guildID);
     let guildMembersPromises = [];
 
-    // results = guild
     guild
         .fetch()
         .then((guildObj) => {
@@ -177,18 +184,21 @@ async function complete(args, textChannel) {
                 .then((guildMembers) => {
                     guildMembers.forEach((member) => {
                         // Just attempt to move each. if it fail, oh well
-                        moveMember(member, preChannelID).catch((err) => {
+                        moveMember(member, preChannelID).catch((error) => {
                             logger.error(
-                                `Error moving member ${member.id}: ${err}`
+                                `Error moving member ${member.id}: ${error}`
                             );
                         });
                     });
                 })
                 .catch((err) => {
-                    logger.error(
-                        "Error fetching GuildMembers post-game: " + err
-                    );
+                    logger.error("Error fetching members post-game: " + err);
                 });
+        })
+        .then(() => {
+            voiceChannelIDs.forEach((id) => {
+                deleteWhenEmpty(guild, id);
+            });
         })
         .catch((err) => {
             logger.error("Error fetching guild: " + err);
