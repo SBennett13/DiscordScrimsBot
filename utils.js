@@ -225,6 +225,38 @@ function initHelp(textChannel) {
     );
 }
 
+/********************
+ * @fucntion registerHelp
+ * @param textChannel The text channel to post to
+ *******************/
+function registerHelp(textChannel) {
+    textChannel.send(
+        "Register Help: `!register --riotID=value --region=value`" +
+            "\nDescription: Associates user's Riot ID with their Discord ID in our database" +
+            "\nUsage: For riotID, set value equal to user's Riot ID, encompassed in quotes (ie. `--riotID='SampleUsername#1234'`)" +
+            "\nFor region, set value equal to the region that the user plays in, encompassed in quotes (ie. `--region='NA'`)" +
+            "\nPossible Regions: `NA, EUW, EUN`"
+    );
+}
+
+/********************
+ * @function register
+ * @param textChannel The text channel to post to
+ *******************/
+function register(args, textChannel) {
+    if (args["riotID"] && args["region"]) {
+        //Does nothing but will eventually associate discord user who sent the message with the inputted riotID and region
+        //We'll need to do some mapping to whatever the Riot API ends up using for regions (ie. For league NA is actually NA1)
+        textChannel.send(
+            "You've registered! If you ever need to reassociate your discord user with another riot account, just call the command again here with the new info :)"
+        );
+    } else {
+        textChannel.send(
+            "We had trouble processing your registration, please call `!register --help` to see the correct syntax"
+        );
+    }
+}
+
 /******************
  * @function makeVoiceChannel
  * @param guild The guild to make a channel in
@@ -298,4 +330,6 @@ module.exports = {
     initHelp: initHelp,
     findFirstAvailable: findFirstAvailable,
     deleteWhenEmpty: deleteWhenEmpty,
+    registerHelp: registerHelp,
+    register: register,
 };
