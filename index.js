@@ -41,7 +41,10 @@ client.on('ready', () => {
         // Check for command
         if (receivedMessage.content.startsWith('!')) {
             // Only listen for commands in our created channel
-            if (receivedMessage.channel.name === constants.TextChannel) {
+            if (
+                receivedMessage.channel.name === constants.TextChannel &&
+                receivedMessage.channel.parent.name === constants.CategoryName
+            ) {
                 processCommand(receivedMessage);
             } else if (
                 receivedMessage.content.startsWith('!init') &&
