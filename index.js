@@ -113,12 +113,20 @@ let matchAgeInterval = setInterval(() => {
             // Fetch the original text channel, if it can be fetched, send the expiration
             // message to the channel, if not, log the error anyway. Delete the match either way
             let guild = client.guilds.resolve(matchRegistry[v].guildID);
+            let voiceChannelIDs = matchRegistry[v].voiceChannelIDs;
             let textChannel = guild.channels.resolve(
                 matchRegistry[v].textChannel
             );
             textChannel.send(
                 `Match ${v} has been going for over 2 hours...I'm deleting it from the registry.`
             );
+
+            voiceChannelIDs.forEach((id) => {
+                let channel = guild.channels.cache
+                    .filter((v) => v.id === id)
+                    .first();
+                channel.delete("Match Expired");
+            });
 
             delete matchRegistry[v];
         }
