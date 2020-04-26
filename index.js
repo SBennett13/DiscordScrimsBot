@@ -122,10 +122,12 @@ let matchAgeInterval = setInterval(() => {
             );
 
             voiceChannelIDs.forEach((id) => {
-                let channel = guild.channels.cache
-                    .filter((v) => v.id === id)
-                    .first();
-                channel.delete("Match Expired");
+                guild.channels
+                    .resolve(id)
+                    .delete("Match Expired")
+                    .catch((err) => {
+                        logger.error("Error deleting rooms: " + err);
+                    });
             });
 
             delete matchRegistry[v];
