@@ -19,7 +19,7 @@ const {
     init,
     deleteWhenEmpty,
     registerHelp,
-    register,
+    register
 } = require("./utils");
 const logger = getLogger("main");
 
@@ -34,6 +34,30 @@ client.on("ready", () => {
         .catch((e) => {
             console.log("Error setting activity: " + e);
         });
+
+    client.on("guildCreate", (guild) => {
+        init(guild, (err) => {
+            if (err) {
+                logger.error(
+                    `Error initing in new Guild ${guild.name}: ` + err
+                );
+            } else {
+                let textChannel = guild.channels.cache
+                    .filter(
+                        (v) =>
+                            v.name === constants.TextChannel &&
+                            v.parent.name === constants.CategoryName
+                    )
+                    .first();
+                textChannel.send(
+                    "Thanks for using PugsBot! When I joined, I auto initialized and am ready for use." +
+                        "I am only listening to this channel for commands. Use `!help` to get a listing of my commands." +
+                        "See command options with `!command --help. Please notify server admins if bugs are found so this" +
+                        "bot can be improved!"
+                );
+            }
+        });
+    });
     client.on("message", (receivedMessage) => {
         // Prevent bot from responding to its own messages
         if (receivedMessage.author === client.user) {
