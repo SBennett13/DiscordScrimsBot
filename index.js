@@ -234,7 +234,7 @@ let matchAgeInterval = setInterval(() => {
 function helpMessage(args, channel) {
     channel.send(
         "Syntax: !command --flag=value" +
-            "\nPossible commands: valorant, complete, init, bugs" +
+            "\nPossible commands: valorant, complete, init, bug" +
             "\nType `!command --help` for command options"
     );
 }
