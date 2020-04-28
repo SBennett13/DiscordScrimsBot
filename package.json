@@ -14,6 +14,7 @@
         "unique-names-generator": "^4.2.0",
         "uuid": "^7.0.3",
         "winston": "^3.2.1",
+        "winston-daily-rotate-file": "^4.4.2",
         "yargs-parser": "^18.1.2"
     },
     "devDependencies": {

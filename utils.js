@@ -3,6 +3,7 @@
  **********************/
 
 const winston = require("winston");
+require("winston-daily-rotate-file");
 const constants = require("./constants");
 
 /*****************
@@ -39,7 +40,7 @@ function getPlayers(guild, excludes = []) {
             error:
                 "The " +
                 constants.PregameChannel +
-                " Channel was not found. Please run `!init` to create voice channels",
+                " Channel was not found. Please run `!init` to create voice channels"
         };
     }
     preChannel.members.each((v) => {
@@ -72,14 +73,14 @@ function makeTeams(allPlayers, teamSize) {
         team1.push(remainingPlayers[rand]);
         remainingPlayers = [
             ...remainingPlayers.slice(0, rand),
-            ...remainingPlayers.slice(rand + 1),
+            ...remainingPlayers.slice(rand + 1)
         ];
 
         rand = getRandom(remainingPlayers.length);
         team2.push(remainingPlayers[rand]);
         remainingPlayers = [
             ...remainingPlayers.slice(0, rand),
-            ...remainingPlayers.slice(rand + 1),
+            ...remainingPlayers.slice(rand + 1)
         ];
     }
     return { team1: team1, team2: team2 };
@@ -131,6 +132,12 @@ function getRandom(max) {
  * @returns A winston logger instance
  ***********************/
 function getLogger(name) {
+    let fileLogger = new winston.transports.DailyRotateFile({
+        filename: "scrimsbot-%DATE%.log",
+        datePattern: "YYYY-MM-DD",
+        dirname: "./logs",
+        maxFiles: 10
+    });
     return winston.createLogger({
         level: "info",
         format: winston.format.combine(
@@ -142,13 +149,8 @@ function getLogger(name) {
                 return `${date}|${time} [${name.toLocaleUpperCase()}|${level.toLocaleUpperCase()}]: ${message}`;
             })
         ),
-        transports: [
-            new winston.transports.File({
-                filename: `./logs/scrimbot.log`,
-            }),
-            new winston.transports.Console(),
-        ],
-        levels: winston.config.syslog.levels,
+        transports: [fileLogger, new winston.transports.Console()],
+        levels: winston.config.syslog.levels
     });
 }
 
@@ -170,7 +172,7 @@ async function init(guild, cb) {
         ) {
             let category = await guild.channels.create(constants.CategoryName, {
                 type: "category",
-                reason: "Created by Scrims Bot",
+                reason: "Created by Scrims Bot"
             });
             parentID = category.id;
         } else {
@@ -272,7 +274,7 @@ function makeVoiceChannel(guild, name, parentChannel) {
     return guild.channels.create(name, {
         type: "voice",
         reason: "Created by Scrims Bot",
-        parent: parentChannel,
+        parent: parentChannel
     });
 }
 
@@ -285,7 +287,7 @@ function makeTextChannel(guild, name, parentChannel) {
     return guild.channels.create(name, {
         type: "text",
         reason: "Created by Scrims Bot",
-        parent: parentChannel,
+        parent: parentChannel
     });
 }
 
@@ -320,5 +322,5 @@ module.exports = {
     initHelp: initHelp,
     deleteWhenEmpty: deleteWhenEmpty,
     registerHelp: registerHelp,
-    register: register,
+    register: register
 };

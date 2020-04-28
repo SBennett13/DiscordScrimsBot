@@ -19,7 +19,7 @@ const {
     init,
     deleteWhenEmpty,
     registerHelp,
-    register,
+    register
 } = require("./utils");
 const logger = getLogger("main");
 
@@ -103,8 +103,6 @@ function processCommand(receivedMsg) {
         cmd = cmd.substr(0, spaceIndex);
     }
     if (args) args = yargs(args);
-
-    logger.info("Command Received: " + cmd + "; Args: " + JSON.stringify(args));
 
     if (cmd === "help") {
         helpMessage(args, receivedMsg.channel);
@@ -275,8 +273,4 @@ function complete(args, textChannel) {
         });
 }
 
-if (process.env.DEV === "true") {
-    client.login(process.env.DEV_TOKEN);
-} else {
-    client.login(process.env.BOT_TOKEN);
-}
+client.login(process.env.BOT_TOKEN);
