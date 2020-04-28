@@ -26,6 +26,8 @@ const logger = getLogger("main");
 // Use this to keep track of matches down the road....
 let matchRegistry = {};
 
+const developers = [process.env.SB3_ID, process.env.GRAVITY_ID];
+
 client.on("ready", () => {
     logger.info("Client Ready");
 
@@ -67,6 +69,15 @@ client.on("ready", () => {
             return;
         }
 
+        if (
+            developers.includes(receivedMessage.author.id) &&
+            receivedMessage.content.startsWith("!UPDATE") &&
+            receivedMessage.channel.type === "dm"
+        ) {
+            echoGlobal(receivedMessage);
+            return;
+        }
+
         // Check for command
         if (receivedMessage.content.startsWith("!")) {
             // Only listen for commands in our created channel
@@ -89,6 +100,29 @@ client.on("ready", () => {
         }
     });
 });
+
+/*********************
+ * @function echoGlobal
+ ********************/
+function echoGlobal(receivedMessage) {
+    let spaceIndex = receivedMessage.content.indexOf(" ");
+    let msg = receivedMessage.content.substr(spaceIndex + 1);
+
+    client.guilds.cache.each((guild) => {
+        guild.fetch().then((guildObj) => {
+            let textChannel = guildObj.channels.cache
+                .filter(
+                    (v) =>
+                        v.name === constants.TextChannel &&
+                        v.parent.name === constants.CategoryName
+                )
+                .first();
+            if (textChannel) {
+                textChannel.send("-----------GLOBAL-----------\n" + msg);
+            }
+        });
+    });
+}
 
 /********************
  * @function processCommand
@@ -154,6 +188,11 @@ function processCommand(receivedMsg) {
         } else {
             register(args, receivedMsg.channel);
         }*/
+    } else if (cmd === "bug") {
+        receivedMsg.channel.send(
+            "Please report bugs to your server admins as you find them. We, the developers, work full-time jobs " +
+                "but we will try to fix bugs when we aren't also playing :)"
+        );
     } else {
         logger.info("Unrecognized command: " + receivedMsg.content);
     }
@@ -197,7 +236,7 @@ let matchAgeInterval = setInterval(() => {
 function helpMessage(args, channel) {
     channel.send(
         "Syntax: !command --flag=value" +
-            "\nPossible commands: valorant, complete, init" +
+            "\nPossible commands: valorant, complete, init, bugs" +
             "\nType `!command --help` for command options"
     );
 }
