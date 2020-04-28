@@ -133,7 +133,7 @@ function getRandom(max) {
  ***********************/
 function getLogger(name) {
     let fileLogger = new winston.transports.DailyRotateFile({
-        filename: "scrimsbot-%DATE%.log",
+        filename: "pugsbot-%DATE%.log",
         datePattern: "YYYY-MM-DD",
         dirname: "./logs",
         maxFiles: 10
