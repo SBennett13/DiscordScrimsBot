@@ -26,6 +26,7 @@ const logger = getLogger("main");
 // Use this to keep track of matches down the road....
 let matchRegistry = {};
 
+
 const developers = [process.env.SB3_ID, process.env.GRAVITY_ID];
 
 client.on("ready", () => {
@@ -39,7 +40,6 @@ client.on("ready", () => {
         .catch((e) => {
             logger.error("Error setting activity: " + e);
         });
-
     client.on("guildCreate", (guild) => {
         init(guild, (err) => {
             if (err) {

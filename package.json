@@ -4,7 +4,7 @@
     "description": "A bot to manage scrims on discord",
     "main": "index.js",
     "scripts": {
-        "start": "nodemon index.js"
+        "start": "env DEV=true nodemon index.js"
     },
     "author": "Scott Bennett - scottbennett027@gmail.com",
     "license": "ISC",
