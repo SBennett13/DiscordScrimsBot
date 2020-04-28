@@ -8,3 +8,5 @@ services:
         container_name: scrims-bot
         restart: always
         network_mode: host
+        volumes:
+            - "/apps/PugsBot/logs:/apps/PugsBot/logs"

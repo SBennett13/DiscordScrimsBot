@@ -4,12 +4,13 @@
     "description": "A bot to manage scrims on discord",
     "main": "index.js",
     "scripts": {
-        "start": "nodemon index.js"
+        "start": "env DEV=true nodemon index.js"
     },
     "author": "Scott Bennett - scottbennett027@gmail.com",
     "license": "ISC",
     "dependencies": {
         "discord.js": "^12.1.1",
+        "dotenv": "^8.2.0",
         "unique-names-generator": "^4.2.0",
         "uuid": "^7.0.3",
         "winston": "^3.2.1",
