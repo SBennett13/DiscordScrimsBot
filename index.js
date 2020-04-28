@@ -5,9 +5,9 @@
 
 const Discord = require("discord.js");
 const client = new Discord.Client();
+require("dotenv").config();
 
 const yargs = require("yargs-parser");
-const secrets = require("./secrets");
 
 const constants = require("./constants");
 
@@ -19,7 +19,7 @@ const {
     init,
     deleteWhenEmpty,
     registerHelp,
-    register
+    register,
 } = require("./utils");
 const logger = getLogger("main");
 
@@ -29,10 +29,13 @@ let matchRegistry = {};
 client.on("ready", () => {
     logger.info("Client Ready");
 
+    client.user.setAvatar("./images/botImg.png").catch((err) => {
+        logger.error("Error setting avatar: " + err);
+    });
     client.user
         .setActivity("!help for help", { type: "WATCHING" })
         .catch((e) => {
-            console.log("Error setting activity: " + e);
+            logger.error("Error setting activity: " + e);
         });
 
     client.on("guildCreate", (guild) => {
@@ -50,9 +53,9 @@ client.on("ready", () => {
                     )
                     .first();
                 textChannel.send(
-                    "Thanks for using PugsBot! When I joined, I auto initialized and am ready for use." +
-                        "I am only listening to this channel for commands. Use `!help` to get a listing of my commands." +
-                        "See command options with `!command --help. Please notify server admins if bugs are found so this" +
+                    "Thanks for using PugsBot! When I joined, I auto initialized and am ready for use. " +
+                        "I am only listening to this channel for commands. Use `!help` to get a listing of my commands. " +
+                        "See command options with `!command --help`. Please notify server admins if bugs are found so this" +
                         "bot can be improved!"
                 );
             }
@@ -69,9 +72,7 @@ client.on("ready", () => {
             // Only listen for commands in our created channel
             if (
                 receivedMessage.channel.name === constants.TextChannel &&
-                receivedMessage.channel.parent.name ===
-                    constants.CategoryName &&
-                !receivedMessage.content.startsWith("!register")
+                receivedMessage.channel.parent.name === constants.CategoryName
             ) {
                 processCommand(receivedMessage);
             } else if (
@@ -147,11 +148,14 @@ function processCommand(receivedMsg) {
             });
         }
     } else if (cmd === "register") {
-        if (args["help"]) {
+        receivedMsg.channel.send(
+            "This feature will be used to link Discord and Valorant accounts for PUGs stat tracking when Riot Games releases their API. Stay tuned."
+        );
+        /*if (args["help"] || receivedMsg.channel.type === "text") {
             registerHelp(receivedMsg.channel);
         } else {
             register(args, receivedMsg.channel);
-        }
+        }*/
     } else {
         logger.info("Unrecognized command: " + receivedMsg.content);
     }
@@ -195,7 +199,7 @@ let matchAgeInterval = setInterval(() => {
 function helpMessage(args, channel) {
     channel.send(
         "Syntax: !command --flag=value" +
-            "\nPossible commands: valorant, complete" +
+            "\nPossible commands: valorant, complete, init" +
             "\nType `!command --help` for command options"
     );
 }
@@ -271,4 +275,8 @@ function complete(args, textChannel) {
         });
 }
 
-client.login(secrets.bot_secret_token);
+if (process.env.DEV === "true") {
+    client.login(process.env.DEV_TOKEN);
+} else {
+    client.login(process.env.BOT_TOKEN);
+}

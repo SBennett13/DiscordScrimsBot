@@ -173,7 +173,6 @@ async function init(guild, cb) {
                 reason: "Created by Scrims Bot",
             });
             parentID = category.id;
-            console.log(category);
         } else {
             parentID = await guild.channels.cache
                 .filter(
@@ -220,39 +219,46 @@ async function init(guild, cb) {
  *******************/
 function initHelp(textChannel) {
     textChannel.send(
-        "Init Help: `!init --flag=value ...`" +
+        "Init Help: `!init`" +
             "\nDescription: Creates a category channel, a voice channel and a text channel for use with the bot"
     );
 }
 
 /********************
  * @fucntion registerHelp
- * @param textChannel The text channel to post to
+ * @param channel The text channel to post to
  *******************/
-function registerHelp(textChannel) {
-    textChannel.send(
-        "Register Help: `!register --riotID=value --region=value`" +
-            "\nDescription: Associates user's Riot ID with their Discord ID in our database" +
-            "\nUsage: For riotID, set value equal to user's Riot ID, encompassed in quotes (ie. `--riotID='SampleUsername#1234'`)" +
-            "\nFor region, set value equal to the region that the user plays in, encompassed in quotes (ie. `--region='NA'`)" +
-            "\nPossible Regions: `NA, EUW, EUN`"
-    );
+let registerHelpString =
+    "Register Help: `!register --riotID=value --region=value`" +
+    "\nDescription: Associates user's Riot ID with their Discord ID in our database" +
+    "\nUsage: For riotID, set value equal to user's Riot ID, encompassed in quotes (ie. `--riotID='SampleUsername#1234'`)" +
+    "\nFor region, set value equal to the region that the user plays in, encompassed in quotes (ie. `--region='NA'`)" +
+    "\nPossible Regions: `NA, EUW, EUN`";
+
+function registerHelp(channel) {
+    let textDisclaimer = "";
+    if (channel.type === "text") {
+        textDisclaimer =
+            "\nIn order to register, DM me with the register command, including your riotID and region flags.";
+    }
+    channel.send(registerHelpString + textDisclaimer);
 }
 
 /********************
  * @function register
- * @param textChannel The text channel to post to
+ * @param channel The text channel to post to
  *******************/
-function register(args, textChannel) {
+function register(args, channel) {
     if (args["riotID"] && args["region"]) {
         //Does nothing but will eventually associate discord user who sent the message with the inputted riotID and region
         //We'll need to do some mapping to whatever the Riot API ends up using for regions (ie. For league NA is actually NA1)
-        textChannel.send(
+        channel.send(
             "You've registered! If you ever need to reassociate your discord user with another riot account, just call the command again here with the new info :)"
         );
     } else {
-        textChannel.send(
-            "We had trouble processing your registration, please call `!register --help` to see the correct syntax"
+        channel.send(
+            "We had trouble processing your registration...\n" +
+                registerHelpString
         );
     }
 }
@@ -281,22 +287,6 @@ function makeTextChannel(guild, name, parentChannel) {
         reason: "Created by Scrims Bot",
         parent: parentChannel,
     });
-}
-
-/*****************
- * @function findFirstAvailable
- * @param array A sorted array of numbers
- * @param start The index to start at
- * @param stop The index to stop at
- * @returns The lowest available index
- ****************/
-function findFirstAvailable(array, start, stop) {
-    if (start > stop) return stop + 1;
-    if (start !== array[start]) return start;
-
-    let mid = (start + stop) / 2;
-    if (mid === array[mid]) return findFirstAvailable(array, mid + 1, stop);
-    return findFirstAvailable(array, start, mid);
 }
 
 /*******************
@@ -328,7 +318,6 @@ module.exports = {
     makeVoiceChannel: makeVoiceChannel,
     makeTextChannel: makeTextChannel,
     initHelp: initHelp,
-    findFirstAvailable: findFirstAvailable,
     deleteWhenEmpty: deleteWhenEmpty,
     registerHelp: registerHelp,
     register: register,
