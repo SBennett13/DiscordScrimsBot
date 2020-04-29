@@ -55,7 +55,7 @@ client.on("ready", () => {
                 textChannel.send(
                     "Thanks for using PugsBot! When I joined, I auto initialized and am ready for use. " +
                         "I am only listening to this channel for commands. Use `!help` to get a listing of my commands. " +
-                        "See command options with `!command --help`. Please notify server admins if bugs are found so this" +
+                        "See command options with `!command --help`. Please notify server admins if bugs are found so this " +
                         "bot can be improved!"
                 );
             }
