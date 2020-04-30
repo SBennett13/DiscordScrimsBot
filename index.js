@@ -8,24 +8,45 @@ const client = new Discord.Client();
 require("dotenv").config();
 
 const yargs = require("yargs-parser");
+const app = require("express")();
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 const constants = require("./constants");
-
 const { createValorant, valorantHelp } = require("./valorant");
 const {
     moveMember,
     getLogger,
     initHelp,
     init,
-    deleteWhenEmpty,
-    registerHelp,
-    register
+    deleteWhenEmpty
 } = require("./utils");
 const logger = getLogger("main");
 
 // Use this to keep track of matches down the road....
 let matchRegistry = {};
 const developers = [process.env.SB3_ID, process.env.GRAVITY_ID];
+
+app.get("/registry", (req, res) => {
+    logger.info("GET request to /registry");
+    if (req.query.matchID) {
+        const matchID = req.query.matchID;
+        logger.info("Queried for match " + matchID);
+        if (matchRegistry[matchID]) {
+            res.status(200).json({ data: { match: matchRegistry[matchID] } });
+        } else {
+            res.status(404).json({ error: "Match not found in registry" });
+        }
+        return;
+    }
+    res.status(200).json({
+        data: {
+            registry: matchRegistry,
+            numberOfMatches: Object.keys(matchRegistry).length
+        }
+    });
+});
 
 client.on("ready", () => {
     logger.info("Client Ready");
@@ -191,6 +212,12 @@ function processCommand(receivedMsg) {
             "Please report bugs to your server admins as you find them. We, the developers, work full-time jobs " +
                 "but we will try to fix bugs when we aren't also playing :)"
         );
+    } else if (cmd === "link") {
+        receivedMsg.channel.send(
+            "Click the following link to invite this bot to your own server. " +
+                "Just make sure the person who invites the bot to the server can grant it all the permissions it needs.\n\n" +
+                "https://discordapp.com/api/oauth2/authorize?client_id=699452766879350815&permissions=16854064&scope=bot"
+        );
     } else {
         logger.info("Unrecognized command: " + receivedMsg.content);
     }
@@ -311,3 +338,7 @@ function complete(args, textChannel) {
 }
 
 client.login(process.env.BOT_TOKEN);
+const port = parseInt(process.env.PORT, 10);
+app.listen(port, () => {
+    logger.info("Express is listening on port " + port);
+});
