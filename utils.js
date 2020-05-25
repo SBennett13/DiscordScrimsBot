@@ -4,6 +4,11 @@
 
 const winston = require("winston");
 require("winston-daily-rotate-file");
+const {
+    uniqueNamesGenerator,
+    adjectives,
+    names
+} = require("unique-names-generator");
 const constants = require("./constants");
 
 /*****************
@@ -295,8 +300,9 @@ function makeTextChannel(guild, name, parentChannel) {
  * @function deleteWhenEmpty
  * @param guild The guild object
  * @param id The channel Ids
+ * @param timer Time to check for channel emptiness
  ******************/
-function deleteWhenEmpty(guild, id) {
+function deleteWhenEmpty(guild, id, timer = null) {
     let channel = guild.channels.cache.filter((v) => v.id === id).first();
     let deleteInterval = setInterval(() => {
         channel.fetch().then((channel) => {
@@ -305,7 +311,85 @@ function deleteWhenEmpty(guild, id) {
                 clearInterval(deleteInterval);
             }
         });
-    }, 5000);
+    }, timer || 5000);
+}
+
+/******************
+ * @function splitChannel
+ * @param guild The guild object
+ * @param args The args provided
+ *****************/
+function splitChannel(guild, args) {
+    return new Promise((resolve, reject) => {
+        let channel;
+        if (args["channel"]) {
+            channel = guild.channels.cache
+                .filter((v) => v.name === args["channel"])
+                .first();
+        } else {
+            reject(
+                "No channel provided, use --channel to supply a channel name"
+            );
+        }
+
+        let peopleInChannel = [];
+        channel.members.each((v) => {
+            peopleInChannel.push(v);
+        });
+
+        let group1 = [],
+            group2 = [];
+        while (peopleInChannel.length > 0) {
+            let rand = getRandom(peopleInChannel.length);
+            group1.push(peopleInChannel[rand]);
+            peopleInChannel = [
+                ...peopleInChannel.slice(0, rand),
+                ...peopleInChannel.slice(rand + 1)
+            ];
+
+            rand = getRandom(peopleInChannel.length);
+            group2.push(peopleInChannel[rand]);
+            peopleInChannel = [
+                ...peopleInChannel.slice(0, rand),
+                ...peopleInChannel.slice(rand + 1)
+            ];
+        }
+
+        // Make two channels
+        const chan1Name = uniqueNamesGenerator({
+            dictionaries: [adjectives, names],
+            length: 2
+        });
+        const chan2Name = uniqueNamesGenerator({
+            dictionaries: [adjectives, names],
+            length: 2
+        });
+
+        Promise.all([
+            makeVoiceChannel(guild, chan1Name, null),
+            makeVoiceChannel(guild, chan2Name, null)
+        ])
+            .then((res) => {
+                let chan1 = res[0],
+                    chan2 = res[1];
+                // Move people
+                let group1Move = moveMembers(group1, chan1),
+                    group2Move = moveMembers(group2, chan2);
+
+                Promise.all([group1Move, group2Move])
+                    .then((res) => {
+                        deleteWhenEmpty(guild, chan1.id, 1800000);
+                        deleteWhenEmpty(guild, chan2.id, 1800000);
+                        resolve();
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            })
+            .catch((err) => {
+                reject(err);
+            });
+    });
 }
 
 module.exports = {
@@ -322,5 +406,6 @@ module.exports = {
     initHelp: initHelp,
     deleteWhenEmpty: deleteWhenEmpty,
     registerHelp: registerHelp,
-    register: register
+    register: register,
+    splitChannel: splitChannel
 };

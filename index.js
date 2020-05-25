@@ -20,7 +20,8 @@ const {
     getLogger,
     initHelp,
     init,
-    deleteWhenEmpty
+    deleteWhenEmpty,
+    splitChannel
 } = require("./utils");
 const logger = getLogger("main");
 
@@ -218,6 +219,16 @@ function processCommand(receivedMsg) {
                 "Just make sure the person who invites the bot to the server can grant it all the permissions it needs.\n\n" +
                 "https://discordapp.com/api/oauth2/authorize?client_id=699452766879350815&permissions=16854064&scope=bot"
         );
+    } else if (cmd === "split") {
+        splitChannel(receivedMsg.guild, args)
+            .then(() => {
+                receivedMsg.channel.send("Players separated -sb3 ;)");
+            })
+            .catch((err) => {
+                receivedMsg.channel.send(
+                    "Error splitting channel: " + JSON.stringify(err)
+                );
+            });
     } else {
         logger.info("Unrecognized command: " + receivedMsg.content);
     }
